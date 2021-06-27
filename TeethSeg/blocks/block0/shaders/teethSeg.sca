@@ -1,0 +1,30 @@
+//==============================================================================
+// Welcome to shader authoring in Spark AR Studio!
+//==============================================================================
+
+#import <gradients>
+#import <sdf>
+
+
+void main(in function<vec4(vec2)> tex, in function<vec4(vec2)> lipMask, in function<vec4(vec2)> insideColor, in function<vec4(vec2)> outsideColor, in vec2 resolution, in float scale, in float threshold, out vec4 fragColor) {
+  vec2 uv = fragment(std::getVertexTexCoord());
+  float ratio = resolution.x/resolution.y;
+  vec4 l_mask = lipMask(uv);
+  vec4 l_color = insideColor(uv);
+  vec4 o_color = outsideColor(uv);
+  vec4 lt = tex(vec2(uv.x - scale, uv.y + scale * ratio));
+  vec4 ct = tex(vec2(uv.x, uv.y + scale * ratio));
+  vec4 rt = tex(vec2(uv.x + scale, uv.y + scale * ratio));
+  vec4 l = tex(vec2(uv.x - scale, uv.y));
+  vec4 c = tex(vec2(uv.x, uv.y));
+  vec4 r = tex(vec2(uv.x + scale, uv.y));
+  vec4 lb = tex(vec2(uv.x - scale, uv.y - scale * ratio));
+  vec4 cb = tex(vec2(uv.x , uv.y - scale * ratio));
+  vec4 rb = tex(vec2(uv.x + scale, uv.y - scale * ratio));
+  vec4 sum = (lt + ct + rt + l + c + r + lb + cb + rb)/9.;
+  float grey = (sum.x + sum.y + sum.z)/3.;
+  grey = (grey - .5) * 1.7 + .5;
+  float base = step(threshold, grey);
+  l_color = mix(o_color, l_color, base);
+  fragColor = mix(vec4(0.), l_color, l_mask.r);
+}

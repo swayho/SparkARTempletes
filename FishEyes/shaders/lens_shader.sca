@@ -1,0 +1,38 @@
+//==============================================================================
+// Welcome to shader authoring in Spark AR Studio!
+//==============================================================================
+
+#import <gradients>
+#import <sdf>
+
+// Entry point of the shader code asset
+//
+// @param[default=#00FFFFFF] color1
+// @param[default=#0000C0FF] color2
+// @param[default=5.0,min=4.0,max=9.0] armCount
+// @return color
+
+float getCurveValue(float r, float c_str){
+  return abs(pow(r, c_str)) * -1. + 1.;
+}
+
+float r_distance(vec2 v1, vec2 v2, float xy_ratio){
+  float dx = pow(v2.x - v1.x, 2.);
+  float dy = pow((v2.y - v1.y) / xy_ratio, 2.);
+  return sqrt(dx + dy);
+}
+
+
+void main(in function<vec4(vec2)> inside_tex, in function<vec4(vec2)> outside_tex, in vec2 resolution, in vec2 center, in float radius, in float str, in float curve, out vec4 fragColor) {
+  vec2 uv = fragment(std::getVertexTexCoord());
+  vec2 org_uv = uv;
+  float xy_ratio = resolution.x/resolution.y;
+  float dr = r_distance(vec2(.5), uv, xy_ratio);
+  float d_str = getCurveValue(dr, curve) * str;
+  float smooth = 720./resolution.x * .01;
+  float alpha = 1. - smoothstep(radius - smooth, radius + smooth, r_distance(center, uv, xy_ratio));
+  uv -= .5;
+  uv /= d_str;
+  uv += .5;
+  fragColor = mix(outside_tex(org_uv), inside_tex(uv), alpha);
+}

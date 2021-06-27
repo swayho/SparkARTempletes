@@ -1,0 +1,23 @@
+//==============================================================================
+// Welcome to shader authoring in Spark AR Studio!
+//==============================================================================
+
+#import <gradients>
+#import <sdf>
+
+
+void main(in function<vec4(vec2)> tex, in vec2 resolution, in float scale, in float threshold, out vec4 fragColor) {
+  vec2 uv = fragment(std::getVertexTexCoord());
+  float ratio = resolution.x/resolution.y;
+  vec4 lt = tex(vec2(uv.x - scale, uv.y + scale * ratio));
+  vec4 ct = tex(vec2(uv.x, uv.y + scale * ratio));
+  vec4 rt = tex(vec2(uv.x + scale, uv.y + scale * ratio));
+  vec4 l = tex(vec2(uv.x - scale, uv.y));
+
+  vec4 r = tex(vec2(uv.x + scale, uv.y));
+  vec4 lb = tex(vec2(uv.x - scale, uv.y - scale * ratio));
+  vec4 cb = tex(vec2(uv.x , uv.y - scale * ratio));
+  vec4 rb = tex(vec2(uv.x + scale, uv.y - scale * ratio));
+  vec4 sum = (lt + ct + rt + l - r - lb - cb - rb)/8.;
+  fragColor = vec4(vec3(step(threshold, (sum.x + sum.y + sum.z)/3.)), 1.);
+}
